@@ -355,10 +355,48 @@ def main() -> None:
         # Offer to add human input
         try:
             print("\n" + "=" * 70)
-            choice = input("Add instructions for the agent? (y/n, or Ctrl+C to exit): ").strip().lower()
+            print("  ADD INSTRUCTIONS FOR THE AGENT")
+            print("=" * 70)
+            print("\nOptions:")
+            print("  [1] Type instructions directly (press Enter twice when done)")
+            print("  [2] Paste from clipboard (use Cmd+V on macOS, Ctrl+Shift+V on Linux)")
+            print("  [3] Read from file")
+            print("  [n] Skip - don't add instructions")
+            print("  [q] Quit without resuming")
+            print()
+            print("  TIP: To copy text, use Cmd+C (macOS) or Ctrl+Shift+C (Linux)")
+            print("       Ctrl+C in terminal is reserved for interrupt signals")
+            print()
+            
+            choice = input("Your choice [1/2/3/n/q]: ").strip().lower()
 
-            if choice in ['y', 'yes']:
-                print("\nEnter your instructions for the agent.")
+            if choice == 'q':
+                print("\nExiting...")
+                sys.exit(0)
+            
+            if choice == '3':
+                # Read from file
+                print("\nEnter the path to your instructions file:")
+                file_path = input("> ").strip()
+                
+                if file_path:
+                    try:
+                        # Expand ~ and resolve path
+                        file_path = Path(file_path).expanduser().resolve()
+                        if file_path.exists():
+                            human_input = file_path.read_text().strip()
+                        else:
+                            print(f"\nFile not found: {file_path}")
+                            human_input = ""
+                    except Exception as e:
+                        print(f"\nError reading file: {e}")
+                        human_input = ""
+                else:
+                    human_input = ""
+                    
+            elif choice in ['1', '2', 'y', 'yes']:
+                print("\n" + "-" * 70)
+                print("Enter/paste your instructions below.")
                 print("Press Enter on an empty line when done:")
                 print("-" * 70)
 
@@ -379,19 +417,21 @@ def main() -> None:
                         sys.exit(0)
 
                 human_input = "\n".join(lines).strip()
+            else:
+                human_input = ""
 
-                if human_input:
-                    # Save to HUMAN_INPUT.md
-                    input_file = spec_dir / "HUMAN_INPUT.md"
-                    input_file.write_text(human_input)
-                    print("\n" + "=" * 70)
-                    print("  INSTRUCTIONS SAVED")
-                    print("=" * 70)
-                    print(f"\nYour instructions have been saved to:")
-                    print(f"  {input_file}")
-                    print("\nThe agent will read and follow these instructions when you resume.")
-                else:
-                    print("\nNo instructions provided.")
+            if human_input:
+                # Save to HUMAN_INPUT.md
+                input_file = spec_dir / "HUMAN_INPUT.md"
+                input_file.write_text(human_input)
+                print("\n" + "=" * 70)
+                print("  INSTRUCTIONS SAVED")
+                print("=" * 70)
+                print(f"\nYour instructions have been saved to:")
+                print(f"  {input_file}")
+                print("\nThe agent will read and follow these instructions when you resume.")
+            else:
+                print("\nNo instructions provided.")
 
         except KeyboardInterrupt:
             # User pressed Ctrl+C again during input prompt - exit immediately
